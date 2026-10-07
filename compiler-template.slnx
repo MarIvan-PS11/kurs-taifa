@@ -1,8 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/ExampleLib/ExampleLib.csproj" />
+    <Project Path="src/MiniSharp/MiniSharp.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/ExampleLib.UnitTests/ExampleLib.UnitTests.csproj" />
+    <Project Path="tests/MiniSharp.UnitTests/MiniSharp.UnitTests.csproj" />
   </Folder>
 </Solution>
