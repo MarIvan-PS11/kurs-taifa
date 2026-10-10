@@ -60,12 +60,12 @@ public partial class Lexer
             return ReadString(startLine, startColumn);
         }
 
-        if (char.IsDigit(currentChar))
+        if (IsAsciiDigit(currentChar))
         {
             return ReadNumber(startLine, startColumn);
         }
 
-        if (char.IsLetter(currentChar) || currentChar == '_')
+        if (IsAsciiLetter(currentChar) || currentChar == '_')
         {
             return ReadIdentifierOrKeyword(startLine, startColumn);
         }

@@ -9,7 +9,7 @@ public partial class Lexer
     {
         int startPos = _position;
 
-        while (!IsAtEnd() && char.IsDigit(Peek()))
+        while (!IsAtEnd() && IsAsciiDigit(Peek()))
         {
             Advance();
         }
@@ -27,10 +27,14 @@ public partial class Lexer
         {
             char c = Peek();
 
+            if (c == '\n' || c == '\r')
+            {
+                throw new LexerException("Незакрытая строковая константа: запрещён перенос строки внутри литерала", CurrentPosition());
+            }
+
             if (c == '\\')
             {
                 Advance();
-
                 if (IsAtEnd())
                 {
                     throw new LexerException("Незавершенная escape-последовательность в строке", CurrentPosition());
@@ -38,7 +42,6 @@ public partial class Lexer
 
                 char escaped = Peek();
                 Advance();
-
                 switch (escaped)
                 {
                     case 'n':
