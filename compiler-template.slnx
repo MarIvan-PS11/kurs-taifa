@@ -1,8 +1,13 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/MiniSharp/MiniSharp.csproj" />
+    <Project Path="src/Lexer/Lexer.csproj" />
+    <Project Path="src/Parser/Parser.csproj" />
+  </Folder>
+  <Folder Name="/src/Interpreter/">
+    <Project Path="src/Interpreter/Interpreter.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/MiniSharp.UnitTests/MiniSharp.UnitTests.csproj" />
+    <Project Path="tests/Interpreter.AcceptanceTests/Interpreter.AcceptanceTests.csproj" />
+    <Project Path="tests/Lexer.UnitTests/Lexer.UnitTests.csproj" />
   </Folder>
 </Solution>

@@ -24,3 +24,7 @@ tests/coverage-report/
 
 # Sandbox directory
 sandbox/
+# Артефакты тестов
+[Tt]est[Rr]esults/
+*.cobertura.xml
+*.trx

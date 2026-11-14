@@ -14,7 +14,21 @@ public partial class Lexer
             Advance();
         }
 
+        if (!IsAtEnd() && (IsAsciiLetter(Peek()) || Peek() == '_'))
+        {
+            throw new LexerException(
+                "Идентификатор не может начинаться сразу после цифры без разделителя",
+                new SourcePosition(startLine, startColumn));
+        }
+
         string lexeme = _source.Substring(startPos, _position - startPos);
+        if (!ulong.TryParse(lexeme, out ulong value) || value > 9223372036854775808UL)
+        {
+            throw new LexerException(
+                $"Целочисленный литерал '{lexeme}' выходит за диапазон 64-битного знакового целого",
+                new SourcePosition(startLine, startColumn));
+        }
+
         return new Token(TokenType.IntegerLiteral, lexeme, startLine, startColumn);
     }
 
