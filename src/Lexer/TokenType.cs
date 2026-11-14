@@ -56,9 +56,9 @@ public enum TokenType
     Print,
 
     /// <summary>
-    /// Ключевое слово read.
+    /// Ключевое слово readint.
     /// </summary>
-    Read,
+    ReadInt,
 
     /// <summary>
     /// Ключевое слово true.
@@ -166,16 +166,6 @@ public enum TokenType
     RightParen,
 
     /// <summary>
-    /// Левая квадратная скобка ([ ).
-    /// </summary>
-    LeftBracket,
-
-    /// <summary>
-    /// Правая квадратная скобка (] ).
-    /// </summary>
-    RightBracket,
-
-    /// <summary>
     /// Точка с запятой (;).
     /// </summary>
     Semicolon,
@@ -184,11 +174,6 @@ public enum TokenType
     /// Запятая (,).
     /// </summary>
     Comma,
-
-    /// <summary>
-    /// Точка (.).
-    /// </summary>
-    Dot,
 
     /// <summary>
     /// Конец файла (Eof).
