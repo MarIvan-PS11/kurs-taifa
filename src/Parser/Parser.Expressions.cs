@@ -122,13 +122,7 @@ public sealed partial class Parser
         if (token.Type == TokenType.IntegerLiteral)
         {
             Advance();
-
-            if (!ulong.TryParse(token.Lexeme, out ulong value) || value > long.MaxValue)
-            {
-                throw new InterpreterException($"Число '{token.Lexeme}' слишком большое", token);
-            }
-
-            return (long)value;
+            return (long)ulong.Parse(token.Lexeme);
         }
 
         if (token.Type == TokenType.ReadInt)

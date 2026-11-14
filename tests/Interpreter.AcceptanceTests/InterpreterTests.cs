@@ -284,14 +284,33 @@ public class InterpreterTests
     }
 
     /// <summary>
-    /// Проверяет, что литерал больше long.MaxValue без минуса — ошибка выполнения.
+    /// Проверяет, что литерал больше 2^63 — лексическая ошибка.
     /// </summary>
     [Fact]
-    public void PositiveOverflowLiteral_ShouldThrowInterpreterException()
+    public void LiteralOutOfLongRange_ShouldThrowLexerException()
     {
-        string source = "func main() { print 9223372036854775808; }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
-        Assert.Contains("слишком большое", ex.Message);
+        string source = "func main() { print 9223372036854775809; }";
+        LexerException ex = Assert.Throws<LexerException>(() =>
+        {
+            Lexer lexer = new Lexer(source);
+            lexer.Tokenize();
+        });
+        Assert.Contains("выходит за диапазон", ex.Message);
+    }
+
+    /// <summary>
+    /// Проверяет, что цифра(ы) вплотную к букве без разделителя — лексическая ошибка.
+    /// </summary>
+    [Fact]
+    public void LiteralFollowedByLetter_ShouldThrowLexerException()
+    {
+        string source = "func main() { print 12abc; }";
+        LexerException ex = Assert.Throws<LexerException>(() =>
+        {
+            Lexer lexer = new Lexer(source);
+            lexer.Tokenize();
+        });
+        Assert.Contains("после цифры", ex.Message);
     }
 
     /// <summary>

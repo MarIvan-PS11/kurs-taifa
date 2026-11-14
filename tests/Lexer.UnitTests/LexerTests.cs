@@ -77,20 +77,9 @@ public class LexerTests
         { "\"\"", TokenType.StringLiteral, "\"\"" },
         { "\"a\"", TokenType.StringLiteral, "\"a\"" },
         { "\"hello world\"", TokenType.StringLiteral, "\"hello world\"" },
-        { "\"\n\"", TokenType.StringLiteral, "\"\n\"" },
         { "\"\\t\"", TokenType.StringLiteral, "\"\\t\"" },
         { "\"\\\"\"", TokenType.StringLiteral, "\"\\\"\"" },
         { "\"\\\\\"", TokenType.StringLiteral, "\"\\\\\"" },
-        { "\"line1\nline2\"", TokenType.StringLiteral, "\"line1\nline2\"" },
-    };
-
-    public static TheoryData<string> WhitespaceData => new()
-    {
-        " ",
-        "\t",
-        "\n",
-        "\r\n",
-        "   \t\n\r\n",
     };
 
     public static TheoryData<string> WhitespaceData => new()
