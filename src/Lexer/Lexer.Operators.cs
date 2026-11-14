@@ -9,7 +9,6 @@ public partial class Lexer
     {
         char c = Peek();
         Advance();
-
         switch (c)
         {
             case '+': return new Token(TokenType.Plus, "+", startLine, startColumn);
@@ -20,11 +19,8 @@ public partial class Lexer
             case ')': return new Token(TokenType.RightParen, ")", startLine, startColumn);
             case '{': return new Token(TokenType.LeftBrace, "{", startLine, startColumn);
             case '}': return new Token(TokenType.RightBrace, "}", startLine, startColumn);
-            case '[': return new Token(TokenType.LeftBracket, "[", startLine, startColumn);
-            case ']': return new Token(TokenType.RightBracket, "]", startLine, startColumn);
             case ';': return new Token(TokenType.Semicolon, ";", startLine, startColumn);
             case ',': return new Token(TokenType.Comma, ",", startLine, startColumn);
-            case '.': return new Token(TokenType.Dot, ".", startLine, startColumn);
         }
 
         if (c == '=')
