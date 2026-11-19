@@ -1,7 +1,7 @@
 using MiniSharp.Lexer;
 using Xunit;
 
-namespace MiniSharp.Tests;
+namespace MiniSharp.Lexer.UnitTests;
 
 /// <summary>
 /// Модульные тесты для лексического анализатора языка MiniSharp.
@@ -46,7 +46,7 @@ public class LexerTests
         { "func", TokenType.Func, "func" },
         { "return", TokenType.Return, "return" },
         { "print", TokenType.Print, "print" },
-        { "readint", TokenType.ReadInt, "readint" },
+        { "readInt", TokenType.ReadInt, "readInt" },
         { "true", TokenType.True, "true" },
         { "false", TokenType.False, "false" },
         { "main", TokenType.Main, "main" },
@@ -91,12 +91,21 @@ public class LexerTests
         "   \t \n \r\n  ",
     };
 
+    [Fact]
+    public void ReadIntKeyword_ShouldBeCaseSensitive()
+    {
+        List<Token> correct = new Lexer("readInt").Tokenize();
+        List<Token> alternative = new Lexer("readint").Tokenize();
+
+        Assert.Equal(TokenType.ReadInt, correct[0].Type);
+        Assert.Equal(TokenType.Identifier, alternative[0].Type);
+    }
+
     [Theory]
     [MemberData(nameof(SingleCharData))]
     public void SingleCharTokens_ShouldBeRecognized(string source, TokenType expectedType, string expectedLexeme)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(2, tokens.Count);
@@ -109,8 +118,7 @@ public class LexerTests
     [MemberData(nameof(DoubleCharData))]
     public void DoubleCharTokens_ShouldBeRecognized(string source, TokenType expectedType, string expectedLexeme)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(2, tokens.Count);
@@ -122,8 +130,7 @@ public class LexerTests
     [MemberData(nameof(KeywordsData))]
     public void Keywords_ShouldBeRecognized(string source, TokenType expectedType, string expectedLexeme)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(expectedType, tokens[0].Type);
@@ -134,8 +141,7 @@ public class LexerTests
     [MemberData(nameof(IdentifiersData))]
     public void Identifiers_ShouldBeRecognized(string source, TokenType expectedType, string expectedLexeme)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(expectedType, tokens[0].Type);
@@ -146,8 +152,7 @@ public class LexerTests
     [MemberData(nameof(NumbersData))]
     public void Numbers_ShouldBeRecognized(string source, TokenType expectedType, string expectedLexeme)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(expectedType, tokens[0].Type);
@@ -158,8 +163,7 @@ public class LexerTests
     [MemberData(nameof(StringsData))]
     public void Strings_ShouldBeRecognized(string source, TokenType expectedType, string expectedLexeme)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(expectedType, tokens[0].Type);
@@ -169,8 +173,7 @@ public class LexerTests
     [Fact]
     public void NegativeNumber_ShouldBeParsedAsMinusAndInteger()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("-15");
-
+        Lexer lexer = new Lexer("-15");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(3, tokens.Count);
@@ -185,8 +188,7 @@ public class LexerTests
     {
         string longText = new string('a', 1000);
         string source = "\"" + longText + "\"";
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(TokenType.StringLiteral, tokens[0].Type);
@@ -196,8 +198,7 @@ public class LexerTests
     [Fact]
     public void TokensWithoutSpaces_ShouldBeSeparatedCorrectly()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("x=5;");
-
+        Lexer lexer = new Lexer("x=5;");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(5, tokens.Count);
@@ -211,8 +212,7 @@ public class LexerTests
     [Fact]
     public void EmptyInput_ShouldReturnOnlyEof()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("");
-
+        Lexer lexer = new Lexer("");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Single(tokens);
@@ -223,8 +223,7 @@ public class LexerTests
     [MemberData(nameof(WhitespaceData))]
     public void VariousWhitespace_ShouldBeIgnored(string source)
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer(source);
-
+        Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Single(tokens);
@@ -234,8 +233,7 @@ public class LexerTests
     [Fact]
     public void SingleComment_ShouldBeIgnored()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("// это просто комментарий");
-
+        Lexer lexer = new Lexer("// это просто комментарий");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Single(tokens);
@@ -245,8 +243,7 @@ public class LexerTests
     [Fact]
     public void CommentAfterToken_ShouldIgnoreCommentAndKeepToken()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("let // объявление переменной");
-
+        Lexer lexer = new Lexer("let // объявление переменной");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(2, tokens.Count);
@@ -257,8 +254,7 @@ public class LexerTests
     [Fact]
     public void SimpleAssignment_ShouldTokenizeCorrectly()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("let x = 42;");
-
+        Lexer lexer = new Lexer("let x = 42;");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(6, tokens.Count);
@@ -273,8 +269,7 @@ public class LexerTests
     [Fact]
     public void ArithmeticExpression_ShouldTokenizeCorrectly()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("a + b * c - d / e");
-
+        Lexer lexer = new Lexer("a + b * c - d / e");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(10, tokens.Count);
@@ -286,8 +281,7 @@ public class LexerTests
     [Fact]
     public void IfElseBlock_ShouldTokenizeCorrectly()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("if (x == 1) { print true; } else { print false; }");
-
+        Lexer lexer = new Lexer("if (x == 1) { print true; } else { print false; }");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(TokenType.If, tokens[0].Type);
@@ -298,8 +292,7 @@ public class LexerTests
     [Fact]
     public void MultilineProgram_ShouldTrackLineNumbers()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("let x = 1;\nlet y = 2;\nprint x;");
-
+        Lexer lexer = new Lexer("let x = 1;\nlet y = 2;\nprint x;");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(1, tokens[0].Line);
@@ -310,8 +303,7 @@ public class LexerTests
     [Fact]
     public void MultipleOperatorsInRow_ShouldTokenizeSeparately()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("+-*/");
-
+        Lexer lexer = new Lexer("+-*/");
         List<Token> tokens = lexer.Tokenize();
 
         Assert.Equal(5, tokens.Count);
@@ -325,8 +317,7 @@ public class LexerTests
     [Fact]
     public void UnterminatedString_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("\"unclosed string");
-
+        Lexer lexer = new Lexer("\"unclosed string");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("Незакрытая строковая константа", exception.Message);
     }
@@ -334,8 +325,7 @@ public class LexerTests
     [Fact]
     public void InvalidEscapeSequence_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("\"\\x\"");
-
+        Lexer lexer = new Lexer("\"\\x\"");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("Недопустимая escape-последовательность", exception.Message);
     }
@@ -343,8 +333,7 @@ public class LexerTests
     [Fact]
     public void UnknownCharacter_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("@");
-
+        Lexer lexer = new Lexer("@");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("Неизвестный символ", exception.Message);
     }
@@ -352,8 +341,7 @@ public class LexerTests
     [Fact]
     public void SingleAmpersand_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("a & b");
-
+        Lexer lexer = new Lexer("a & b");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("&&", exception.Message);
     }
@@ -361,8 +349,7 @@ public class LexerTests
     [Fact]
     public void SinglePipe_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("a | b");
-
+        Lexer lexer = new Lexer("a | b");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("||", exception.Message);
     }
@@ -370,8 +357,7 @@ public class LexerTests
     [Fact]
     public void NonAsciiIdentifier_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("let переменная = 5;");
-
+        Lexer lexer = new Lexer("let переменная = 5;");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("Неизвестный символ", exception.Message);
     }
@@ -379,8 +365,7 @@ public class LexerTests
     [Fact]
     public void StringWithRealNewline_ShouldThrowLexerException()
     {
-        MiniSharp.Lexer.Lexer lexer = new MiniSharp.Lexer.Lexer("\"hello\nworld\"");
-
+        Lexer lexer = new Lexer("\"hello\nworld\"");
         LexerException exception = Assert.Throws<LexerException>((Action)(() => lexer.Tokenize()));
         Assert.Contains("запрещён перенос строки", exception.Message);
     }

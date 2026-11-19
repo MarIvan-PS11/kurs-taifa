@@ -74,15 +74,15 @@ public class InterpreterTests
     };
 
     /// <summary>
-    /// Тестовые данные для функции readint.
+    /// Тестовые данные для функции readInt.
     /// </summary>
     public static TheoryData<string, IEnumerable<long>, string> ReadIntData => new()
     {
-        { "func main() { print readint(); }", new long[] { 42 }, "42\n" },
-        { "func main() { print readint() * 2; }", new long[] { 21 }, "42\n" },
-        { "func main() { print readint() + readint(); }", new long[] { 10, 32 }, "42\n" },
-        { "func main() { print abs(readint()); }", new long[] { -10 }, "10\n" },
-        { "func main() { print min(readint(), readint()); }", new long[] { 50, 10 }, "10\n" },
+        { "func main() { print readInt(); }", new long[] { 42 }, "42\n" },
+        { "func main() { print readInt() * 2; }", new long[] { 21 }, "42\n" },
+        { "func main() { print readInt() + readInt(); }", new long[] { 10, 32 }, "42\n" },
+        { "func main() { print abs(readInt()); }", new long[] { -10 }, "10\n" },
+        { "func main() { print min(readInt(), readInt()); }", new long[] { 50, 10 }, "10\n" },
     };
 
     /// <summary>
@@ -143,6 +143,37 @@ public class InterpreterTests
     {
         string source = "func main() { print -9223372036854775808; }";
         AssertProgramOutput(source, Array.Empty<long>(), "-9223372036854775808\n");
+    }
+
+    /// <summary>
+    /// Проверяет, что положительный литерал 2^63 выходит за диапазон int64.
+    /// </summary>
+    [Fact]
+    public void PositiveLiteralBeyondMaxLong_ShouldThrowParserException()
+    {
+        string source = "func main() { print 9223372036854775808; }";
+        ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        Assert.Contains("выходит за диапазон", ex.Message);
+    }
+
+    /// <summary>
+    /// Проверяет, что readInt с правильным регистром распознаётся и выполняется.
+    /// </summary>
+    [Fact]
+    public void ReadIntKeywordWithCorrectCase_ShouldWork()
+    {
+        AssertProgramOutput("func main() { print readInt(); }", new long[] { 7 }, "7\n");
+    }
+
+    /// <summary>
+    /// Проверяет, что неправильный регистр readInt не распознаётся как ключевое слово.
+    /// </summary>
+    [Fact]
+    public void ReadIntKeywordWithWrongCase_ShouldBeRejected()
+    {
+        ParserException ex = AssertProgramThrows<ParserException>(
+            "func main() { print readint(); }", Array.Empty<long>());
+        Assert.Contains("Неизвестная встроенная функция", ex.Message);
     }
 
     /// <summary>
@@ -258,7 +289,7 @@ public class InterpreterTests
     {
         string source = "func main() { print abs(1, 2); }";
         ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
-        Assert.Contains("требует ровно 1 аргумент", ex.Message);
+        Assert.Contains("Ожидаемое количество аргументов: 1", ex.Message);
     }
 
     /// <summary>
@@ -269,16 +300,16 @@ public class InterpreterTests
     {
         string source = "func main() { print min(1); }";
         ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
-        Assert.Contains("требует ровно 2 аргумента", ex.Message);
+        Assert.Contains("Ожидаемое количество аргументов: 2", ex.Message);
     }
 
     /// <summary>
-    /// Проверяет выброс исключения при отсутствии ввода для readint.
+    /// Проверяет выброс исключения при отсутствии ввода для readInt.
     /// </summary>
     [Fact]
     public void MissingReadIntInput_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print readint(); }";
+        string source = "func main() { print readInt(); }";
         InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
         Assert.Contains("Неожиданный конец потока ввода", ex.Message);
     }

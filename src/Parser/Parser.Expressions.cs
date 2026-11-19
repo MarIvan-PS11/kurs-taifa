@@ -113,7 +113,7 @@ public sealed partial class Parser
     }
 
     /// <summary>
-    /// primary_expression = integer_literal | "readint", "(", ")" | identifier, "(", [ argument_list ], ")" | "(", expression, ")" ;
+    /// primary_expression = integer_literal | "readInt", "(", ")" | identifier, "(", [ argument_list ], ")" | "(", expression, ")" ;
     /// </summary>
     private long ParsePrimaryExpression()
     {
@@ -121,8 +121,15 @@ public sealed partial class Parser
 
         if (token.Type == TokenType.IntegerLiteral)
         {
+            if (token.Lexeme == "9223372036854775808")
+            {
+                throw new ParserException(
+                    "Положительный целочисленный литерал выходит за диапазон 64-битного знакового целого",
+                    token);
+            }
+
             Advance();
-            return (long)ulong.Parse(token.Lexeme);
+            return checked((long)ulong.Parse(token.Lexeme));
         }
 
         if (token.Type == TokenType.ReadInt)
