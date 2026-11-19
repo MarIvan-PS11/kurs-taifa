@@ -14,7 +14,7 @@ internal static class Keywords
         { "func", TokenType.Func },
         { "return", TokenType.Return },
         { "print", TokenType.Print },
-        { "readint", TokenType.ReadInt },
+        { "readInt", TokenType.ReadInt },
         { "true", TokenType.True },
         { "false", TokenType.False },
         { "main", TokenType.Main },

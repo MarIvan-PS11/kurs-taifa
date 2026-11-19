@@ -56,7 +56,7 @@ public enum TokenType
     Print,
 
     /// <summary>
-    /// Ключевое слово readint.
+    /// Ключевое слово readInt.
     /// </summary>
     ReadInt,
 

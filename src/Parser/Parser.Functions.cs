@@ -16,7 +16,7 @@ public sealed partial class Parser
 
         if (args.Count != func.Arity)
         {
-            throw new ParserException($"Функция '{funcName}' требует ровно {func.Arity} аргумента", token);
+            throw new ParserException($"Функция '{funcName}': Ожидаемое количество аргументов: {func.Arity}", token);
         }
 
         try

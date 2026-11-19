@@ -31,14 +31,14 @@ public sealed class ConsoleEnvironment : IEnvironment
     }
 
     /// <summary>
-    /// Читает целое число из потока ввода для встроенной функции readint.
+    /// Читает целое число из потока ввода для встроенной функции readInt.
     /// </summary>
     public long ReadInt()
     {
         string? input = _input.ReadLine();
         if (input == null)
         {
-            throw new InterpreterException("Неожиданный конец потока ввода при вызове readint()");
+            throw new InterpreterException("Неожиданный конец потока ввода при вызове readInt()");
         }
 
         input = input.Trim();

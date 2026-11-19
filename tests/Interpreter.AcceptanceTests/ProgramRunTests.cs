@@ -37,7 +37,7 @@ public sealed class ProgramRunTests
     [Fact]
     public void Run_ProgramWithReadint_ReadsFromInputStream()
     {
-        string path = CreateTempSourceFile("func main() { print readint() + 1; }");
+        string path = CreateTempSourceFile("func main() { print readInt() + 1; }");
         using StringReader input = new StringReader("41\n");
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
@@ -67,6 +67,26 @@ public sealed class ProgramRunTests
         Assert.Equal(1, exitCode);
         Assert.Equal(string.Empty, output.ToString());
         Assert.Contains("Ошибка лексического анализа", error.ToString());
+    }
+
+    /// <summary>
+    /// Проверяет, что положительный литерал 2^63 приводит к ошибке разбора в CLI.
+    /// </summary>
+    [Fact]
+    public void Run_PositiveLiteralBeyondMaxLong_ReturnsOneAndWritesStderr()
+    {
+        string path = CreateTempSourceFile("func main() { print 9223372036854775808; }");
+        using StringReader input = new StringReader(string.Empty);
+        using StringWriter output = new StringWriter();
+        using StringWriter error = new StringWriter();
+
+        int exitCode = Program.Run(new[] { path }, input, output, error);
+
+        File.Delete(path);
+        Assert.Equal(1, exitCode);
+        Assert.Equal(string.Empty, output.ToString());
+        Assert.Contains("Ошибка разбора", error.ToString());
+        Assert.Contains("выходит за диапазон", error.ToString());
     }
 
     /// <summary>
@@ -108,12 +128,12 @@ public sealed class ProgramRunTests
     }
 
     /// <summary>
-    /// Проверяет код возврата 1 при некорректных данных на входе readint.
+    /// Проверяет код возврата 1 при некорректных данных на входе readInt.
     /// </summary>
     [Fact]
     public void Run_InvalidInput_ReturnsOneAndWritesStderr()
     {
-        string path = CreateTempSourceFile("func main() { print readint(); }");
+        string path = CreateTempSourceFile("func main() { print readInt(); }");
         using StringReader input = new StringReader("abc\n");
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
@@ -126,12 +146,12 @@ public sealed class ProgramRunTests
     }
 
     /// <summary>
-    /// Проверяет код возврата 1 при исчерпанном потоке ввода для readint.
+    /// Проверяет код возврата 1 при исчерпанном потоке ввода для readInt.
     /// </summary>
     [Fact]
     public void Run_EmptyInputForReadint_ReturnsOneAndWritesStderr()
     {
-        string path = CreateTempSourceFile("func main() { print readint(); }");
+        string path = CreateTempSourceFile("func main() { print readInt(); }");
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
