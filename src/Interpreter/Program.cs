@@ -1,7 +1,6 @@
 namespace MiniSharp.Interpreter;
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 using MiniSharp.Lexer;
@@ -42,11 +41,8 @@ public sealed class Program
         try
         {
             string sourceCode = File.ReadAllText(filePath);
-            Lexer lexer = new Lexer(sourceCode);
-            List<Token> tokens = lexer.Tokenize();
             IEnvironment env = new ConsoleEnvironment(input, output);
-            Parser parser = new Parser(tokens, env);
-            parser.ParseProgram();
+            MiniSharpInterpreter.Run(sourceCode, env);
             return 0;
         }
         catch (LexerException ex)

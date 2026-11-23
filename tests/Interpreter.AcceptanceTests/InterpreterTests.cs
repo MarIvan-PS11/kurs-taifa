@@ -433,10 +433,7 @@ public class InterpreterTests
     private static void AssertProgramOutput(string source, IEnumerable<long> input, string expectedOutput)
     {
         FakeEnvironment env = new FakeEnvironment(input);
-        Lexer lexer = new Lexer(source);
-        List<Token> tokens = lexer.Tokenize();
-        Parser parser = new Parser(tokens, env);
-        parser.ParseProgram();
+        MiniSharpInterpreter.Run(source, env);
         Assert.Equal(expectedOutput, env.GetOutput());
     }
 
@@ -447,9 +444,6 @@ public class InterpreterTests
         where TException : Exception
     {
         FakeEnvironment env = new FakeEnvironment(input);
-        Lexer lexer = new Lexer(source);
-        List<Token> tokens = lexer.Tokenize();
-        Parser parser = new Parser(tokens, env);
-        return Assert.Throws<TException>(() => parser.ParseProgram());
+        return Assert.Throws<TException>(() => MiniSharpInterpreter.Run(source, env));
     }
 }
