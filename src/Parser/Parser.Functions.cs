@@ -19,13 +19,6 @@ public sealed partial class Parser
             throw new ParserException($"Функция '{funcName}': Ожидаемое количество аргументов: {func.Arity}", token);
         }
 
-        try
-        {
-            return func.Implementation(args);
-        }
-        catch (OverflowException)
-        {
-            throw new InterpreterException($"Арифметическое переполнение в функции '{funcName}'", token);
-        }
+        return EvaluateChecked(() => func.Implementation(args));
     }
 }

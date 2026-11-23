@@ -22,9 +22,7 @@ public sealed class ProgramRunTests
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
         output.NewLine = "\n";
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(0, exitCode);
         Assert.Equal("42\n", output.ToString());
@@ -35,16 +33,14 @@ public sealed class ProgramRunTests
     /// Проверяет чтение числа из потока ввода через ConsoleEnvironment.
     /// </summary>
     [Fact]
-    public void Run_ProgramWithReadint_ReadsFromInputStream()
+    public void Run_ProgramWithReadInt_ReadsFromInputStream()
     {
         string path = CreateTempSourceFile("func main() { print readInt() + 1; }");
         using StringReader input = new StringReader("41\n");
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
         output.NewLine = "\n";
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(0, exitCode);
         Assert.Equal("42\n", output.ToString());
@@ -60,9 +56,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(1, exitCode);
         Assert.Equal(string.Empty, output.ToString());
@@ -79,9 +73,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(1, exitCode);
         Assert.Equal(string.Empty, output.ToString());
@@ -99,9 +91,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(1, exitCode);
         Assert.Equal(string.Empty, output.ToString());
@@ -118,9 +108,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(1, exitCode);
         Assert.Equal(string.Empty, output.ToString());
@@ -137,9 +125,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader("abc\n");
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(1, exitCode);
         Assert.Contains("Ошибка выполнения", error.ToString());
@@ -149,15 +135,13 @@ public sealed class ProgramRunTests
     /// Проверяет код возврата 1 при исчерпанном потоке ввода для readInt.
     /// </summary>
     [Fact]
-    public void Run_EmptyInputForReadint_ReturnsOneAndWritesStderr()
+    public void Run_EmptyInputForReadInt_ReturnsOneAndWritesStderr()
     {
         string path = CreateTempSourceFile("func main() { print readInt(); }");
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         File.Delete(path);
         Assert.Equal(1, exitCode);
         Assert.Contains("Ошибка выполнения", error.ToString());
@@ -172,9 +156,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(Array.Empty<string>(), input, output, error);
-
         Assert.Equal(1, exitCode);
         Assert.Contains("Использование:", error.ToString());
     }
@@ -189,9 +171,7 @@ public sealed class ProgramRunTests
         using StringReader input = new StringReader(string.Empty);
         using StringWriter output = new StringWriter();
         using StringWriter error = new StringWriter();
-
         int exitCode = Program.Run(new[] { path }, input, output, error);
-
         Assert.Equal(1, exitCode);
         Assert.Contains("не найден", error.ToString());
     }

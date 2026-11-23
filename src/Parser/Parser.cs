@@ -60,4 +60,20 @@ public sealed partial class Parser
             throw new ParserException($"Ожидался токен '{expectedType}', но получен '{CurrentToken().Type}'", CurrentToken());
         }
     }
+
+    /// <summary>
+    /// Выполняет вычисление и преобразует OverflowException в ошибку выполнения.
+    /// Единая точка формирования диагностики переполнения для всех методов парсера.
+    /// </summary>
+    private long EvaluateChecked(Func<long> evaluation)
+    {
+        try
+        {
+            return evaluation();
+        }
+        catch (OverflowException ex)
+        {
+            throw new InterpreterException($"Арифметическое переполнение: {ex.Message}", CurrentToken());
+        }
+    }
 }

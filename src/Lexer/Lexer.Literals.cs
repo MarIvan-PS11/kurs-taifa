@@ -8,7 +8,6 @@ public partial class Lexer
     private Token ReadNumber(int startLine, int startColumn)
     {
         int startPos = _position;
-
         while (!IsAtEnd() && IsAsciiDigit(Peek()))
         {
             Advance();
@@ -22,7 +21,7 @@ public partial class Lexer
         }
 
         string lexeme = _source.Substring(startPos, _position - startPos);
-        if (!ulong.TryParse(lexeme, out ulong value) || value > 9223372036854775808UL)
+        if (!ulong.TryParse(lexeme, out ulong value) || value > IntegerLimits.MaxLiteralMagnitude)
         {
             throw new LexerException(
                 $"Целочисленный литерал '{lexeme}' выходит за диапазон 64-битного знакового целого",
@@ -40,7 +39,6 @@ public partial class Lexer
         while (!IsAtEnd() && Peek() != '"')
         {
             char c = Peek();
-
             if (c == '\n' || c == '\r')
             {
                 throw new LexerException("Незакрытая строковая константа: запрещён перенос строки внутри литерала", CurrentPosition());

@@ -356,6 +356,28 @@ public class InterpreterTests
     }
 
     /// <summary>
+    /// Проверяет переполнение в abs при аргументе long.MinValue.
+    /// </summary>
+    [Fact]
+    public void OverflowInAbsFunction_ShouldThrowInterpreterException()
+    {
+        string source = "func main() { print abs(-9223372036854775808); }";
+        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        Assert.Contains("Арифметическое переполнение", ex.Message);
+    }
+
+    /// <summary>
+    /// Проверяет переполнение в sqr при большом аргументе.
+    /// </summary>
+    [Fact]
+    public void OverflowInSqrFunction_ShouldThrowInterpreterException()
+    {
+        string source = "func main() { print sqr(3037000500); }";
+        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        Assert.Contains("Арифметическое переполнение", ex.Message);
+    }
+
+    /// <summary>
     /// Проверяет выполнение программы с пустым блоком инструкций.
     /// </summary>
     [Fact]
@@ -381,7 +403,7 @@ public class InterpreterTests
     [Fact]
     public void CommentsInsideProgram_ShouldBeIgnored()
     {
-        string source = "func main() { // начало\n print 3 + 4; // конец\n }";
+        string source = "func main() { // начало\nprint 3 + 4; // конец\n}";
         AssertProgramOutput(source, Array.Empty<long>(), "7\n");
     }
 

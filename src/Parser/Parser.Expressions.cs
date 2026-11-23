@@ -20,7 +20,7 @@ public sealed partial class Parser
     /// </summary>
     private long ParseAdditiveExpression()
     {
-        try
+        return EvaluateChecked(() =>
         {
             long left = ParseMultiplicativeExpression();
             while (CurrentToken().Type == TokenType.Plus || CurrentToken().Type == TokenType.Minus)
@@ -39,11 +39,7 @@ public sealed partial class Parser
             }
 
             return left;
-        }
-        catch (OverflowException ex)
-        {
-            throw new InterpreterException($"Арифметическое переполнение: {ex.Message}", CurrentToken());
-        }
+        });
     }
 
     /// <summary>
@@ -51,7 +47,7 @@ public sealed partial class Parser
     /// </summary>
     private long ParseMultiplicativeExpression()
     {
-        try
+        return EvaluateChecked(() =>
         {
             long left = ParseUnaryExpression();
             while (CurrentToken().Type == TokenType.Star || CurrentToken().Type == TokenType.Slash)
@@ -75,11 +71,7 @@ public sealed partial class Parser
             }
 
             return left;
-        }
-        catch (OverflowException ex)
-        {
-            throw new InterpreterException($"Арифметическое переполнение: {ex.Message}", CurrentToken());
-        }
+        });
     }
 
     /// <summary>
@@ -87,14 +79,13 @@ public sealed partial class Parser
     /// </summary>
     private long ParseUnaryExpression()
     {
-        try
+        return EvaluateChecked(() =>
         {
             if (CurrentToken().Type == TokenType.Minus)
             {
                 Advance();
-
                 if (CurrentToken().Type == TokenType.IntegerLiteral
-                    && CurrentToken().Lexeme == "9223372036854775808")
+                    && CurrentToken().Lexeme == IntegerLimits.MaxLiteralMagnitudeLexeme)
                 {
                     Advance();
                     return long.MinValue;
@@ -105,11 +96,7 @@ public sealed partial class Parser
             }
 
             return ParsePrimaryExpression();
-        }
-        catch (OverflowException ex)
-        {
-            throw new InterpreterException($"Арифметическое переполнение: {ex.Message}", CurrentToken());
-        }
+        });
     }
 
     /// <summary>
@@ -118,10 +105,9 @@ public sealed partial class Parser
     private long ParsePrimaryExpression()
     {
         Token token = CurrentToken();
-
         if (token.Type == TokenType.IntegerLiteral)
         {
-            if (token.Lexeme == "9223372036854775808")
+            if (token.Lexeme == IntegerLimits.MaxLiteralMagnitudeLexeme)
             {
                 throw new ParserException(
                     "Положительный целочисленный литерал выходит за диапазон 64-битного знакового целого",
