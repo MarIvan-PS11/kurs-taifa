@@ -3,7 +3,7 @@ namespace MiniSharp.Interpreter;
 using System;
 using System.IO;
 
-using MiniSharp.Parser;
+using MiniSharp.Execution;
 
 /// <summary>
 /// Реализация окружения поверх текстовых потоков ввода и вывода.

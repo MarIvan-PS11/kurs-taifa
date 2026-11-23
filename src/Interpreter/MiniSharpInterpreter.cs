@@ -1,12 +1,14 @@
 namespace MiniSharp.Interpreter;
 
+using System.Collections.Generic;
+
+using MiniSharp.Ast;
+using MiniSharp.Execution;
 using MiniSharp.Lexer;
 using MiniSharp.Parser;
 
 /// <summary>
-/// Стабильный фасад интерпретатора: лексер → парсер → вычисление.
-/// Приёмочные тесты и консольный запуск вызывают только этот класс,
-/// поэтому внутренние изменения конвейера не затрагивают тесты.
+/// Стабильный фасад интерпретатора: лексер → парсер → вычислитель.
 /// </summary>
 public static class MiniSharpInterpreter
 {
@@ -17,7 +19,10 @@ public static class MiniSharpInterpreter
     {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.Tokenize();
-        Parser parser = new Parser(tokens, env);
-        parser.ParseProgram();
+        Parser parser = new Parser(tokens);
+        ProgramNode program = parser.ParseProgram();
+
+        AstEvaluator evaluator = new AstEvaluator(env);
+        evaluator.Evaluate(program);
     }
 }

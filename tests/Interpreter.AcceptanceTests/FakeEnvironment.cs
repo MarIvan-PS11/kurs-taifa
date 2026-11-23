@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using MiniSharp.Parser;
+using MiniSharp.Execution;
 
 /// <summary>
 /// Тестовый дублёр (Fake) для перехвата ввода и вывода интерпретатора.
@@ -14,16 +14,25 @@ public sealed class FakeEnvironment : IEnvironment
     private readonly Queue<long> _inputValues;
     private readonly StringBuilder _output = new();
 
+    /// <summary>
+    /// Создаёт тестовое окружение с указанными входными значениями.
+    /// </summary>
     public FakeEnvironment(IEnumerable<long>? inputValues = null)
     {
         _inputValues = new Queue<long>(inputValues ?? Array.Empty<long>());
     }
 
+    /// <summary>
+    /// Печатает целое число в накопитель вывода.
+    /// </summary>
     public void Print(long value)
     {
         _output.Append(value.ToString() + "\n");
     }
 
+    /// <summary>
+    /// Читает следующее значение из очереди входных данных.
+    /// </summary>
     public long ReadInt()
     {
         if (_inputValues.Count == 0)

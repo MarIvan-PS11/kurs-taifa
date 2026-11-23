@@ -1,34 +1,42 @@
 namespace MiniSharp.Parser;
 
+using System.Collections.Generic;
+
+using MiniSharp.Ast;
 using MiniSharp.Lexer;
 
 /// <summary>
-/// Синтаксический анализатор с немедленной интерпретацией (рекурсивный спуск).
+/// Синтаксический анализатор, строящий абстрактное синтаксическое дерево.
 /// </summary>
 public sealed partial class Parser
 {
     private readonly List<Token> _tokens;
     private int _position;
-    private readonly IEnvironment _env;
 
-    public Parser(List<Token> tokens, IEnvironment env)
+    /// <summary>
+    /// Создаёт парсер для указанного потока токенов.
+    /// </summary>
+    public Parser(List<Token> tokens)
     {
         _tokens = tokens;
         _position = 0;
-        _env = env;
     }
 
     /// <summary>
     /// program = "func", "main", "(", ")", block, end_of_file ;
     /// </summary>
-    public void ParseProgram()
+    public ProgramNode ParseProgram()
     {
+        SourcePosition startPos = new SourcePosition(CurrentToken().Line, CurrentToken().Column);
         Consume(TokenType.Func);
         Consume(TokenType.Main);
         Consume(TokenType.LeftParen);
         Consume(TokenType.RightParen);
-        ParseBlock();
+        BlockStatement body = ParseBlock();
         Consume(TokenType.Eof);
+
+        FunctionDeclaration mainFunc = new FunctionDeclaration("main", body, startPos);
+        return new ProgramNode(mainFunc, startPos);
     }
 
     private Token CurrentToken()
@@ -58,22 +66,6 @@ public sealed partial class Parser
         else
         {
             throw new ParserException($"Ожидался токен '{expectedType}', но получен '{CurrentToken().Type}'", CurrentToken());
-        }
-    }
-
-    /// <summary>
-    /// Выполняет вычисление и преобразует OverflowException в ошибку выполнения.
-    /// Единая точка формирования диагностики переполнения для всех методов парсера.
-    /// </summary>
-    private long EvaluateChecked(Func<long> evaluation)
-    {
-        try
-        {
-            return evaluation();
-        }
-        catch (OverflowException ex)
-        {
-            throw new InterpreterException($"Арифметическое переполнение: {ex.Message}", CurrentToken());
         }
     }
 }

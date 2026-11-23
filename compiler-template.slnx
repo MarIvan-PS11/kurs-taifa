@@ -3,6 +3,7 @@
     <Project Path="src/Lexer/Lexer.csproj" />
     <Project Path="src/Ast/Ast.csproj" />
     <Project Path="src/Parser/Parser.csproj" />
+    <Project Path="src/Execution/Execution.csproj" />
   </Folder>
   <Folder Name="/src/Interpreter/">
     <Project Path="src/Interpreter/Interpreter.csproj" />

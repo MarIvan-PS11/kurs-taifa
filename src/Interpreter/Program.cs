@@ -3,6 +3,7 @@ namespace MiniSharp.Interpreter;
 using System;
 using System.IO;
 
+using MiniSharp.Execution;
 using MiniSharp.Lexer;
 using MiniSharp.Parser;
 

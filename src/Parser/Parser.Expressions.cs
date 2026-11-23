@@ -1,5 +1,8 @@
 namespace MiniSharp.Parser;
 
+using System.Collections.Generic;
+
+using MiniSharp.Ast;
 using MiniSharp.Lexer;
 
 /// <summary>
@@ -10,7 +13,7 @@ public sealed partial class Parser
     /// <summary>
     /// expression = additive_expression ;
     /// </summary>
-    private long ParseExpression()
+    private Expression ParseExpression()
     {
         return ParseAdditiveExpression();
     }
@@ -18,93 +21,73 @@ public sealed partial class Parser
     /// <summary>
     /// additive_expression = multiplicative_expression, { ( "+" | "-" ), multiplicative_expression } ;
     /// </summary>
-    private long ParseAdditiveExpression()
+    private Expression ParseAdditiveExpression()
     {
-        return EvaluateChecked(() =>
+        Expression left = ParseMultiplicativeExpression();
+        while (CurrentToken().Type == TokenType.Plus || CurrentToken().Type == TokenType.Minus)
         {
-            long left = ParseMultiplicativeExpression();
-            while (CurrentToken().Type == TokenType.Plus || CurrentToken().Type == TokenType.Minus)
-            {
-                TokenType op = CurrentToken().Type;
-                Advance();
-                long right = ParseMultiplicativeExpression();
-                if (op == TokenType.Plus)
-                {
-                    left = checked(left + right);
-                }
-                else
-                {
-                    left = checked(left - right);
-                }
-            }
+            TokenType op = CurrentToken().Type;
+            SourcePosition pos = new SourcePosition(CurrentToken().Line, CurrentToken().Column);
+            Advance();
+            Expression right = ParseMultiplicativeExpression();
+            BinaryOperator binOp = op == TokenType.Plus ? BinaryOperator.Add : BinaryOperator.Subtract;
+            left = new BinaryExpression(left, binOp, right, pos);
+        }
 
-            return left;
-        });
+        return left;
     }
 
     /// <summary>
     /// multiplicative_expression = unary_expression, { ( "*" | "/" ), unary_expression } ;
     /// </summary>
-    private long ParseMultiplicativeExpression()
+    private Expression ParseMultiplicativeExpression()
     {
-        return EvaluateChecked(() =>
+        Expression left = ParseUnaryExpression();
+        while (CurrentToken().Type == TokenType.Star || CurrentToken().Type == TokenType.Slash)
         {
-            long left = ParseUnaryExpression();
-            while (CurrentToken().Type == TokenType.Star || CurrentToken().Type == TokenType.Slash)
-            {
-                TokenType op = CurrentToken().Type;
-                Advance();
-                long right = ParseUnaryExpression();
-                if (op == TokenType.Star)
-                {
-                    left = checked(left * right);
-                }
-                else
-                {
-                    if (right == 0)
-                    {
-                        throw new InterpreterException("Деление на ноль", CurrentToken());
-                    }
+            TokenType op = CurrentToken().Type;
+            SourcePosition pos = new SourcePosition(CurrentToken().Line, CurrentToken().Column);
+            Advance();
+            Expression right = ParseUnaryExpression();
+            BinaryOperator binOp = op == TokenType.Star ? BinaryOperator.Multiply : BinaryOperator.Divide;
+            left = new BinaryExpression(left, binOp, right, pos);
+        }
 
-                    left = checked(left / right);
-                }
-            }
-
-            return left;
-        });
+        return left;
     }
 
     /// <summary>
     /// unary_expression = ( "-", unary_expression ) | primary_expression ;
     /// </summary>
-    private long ParseUnaryExpression()
+    private Expression ParseUnaryExpression()
     {
-        return EvaluateChecked(() =>
+        if (CurrentToken().Type == TokenType.Minus)
         {
-            if (CurrentToken().Type == TokenType.Minus)
+            SourcePosition pos = new SourcePosition(CurrentToken().Line, CurrentToken().Column);
+            Advance();
+
+            // Специальный случай: -9223372036854775808 сворачивается в литерал long.MinValue.
+            if (CurrentToken().Type == TokenType.IntegerLiteral
+                && CurrentToken().Lexeme == IntegerLimits.MaxLiteralMagnitudeLexeme)
             {
                 Advance();
-                if (CurrentToken().Type == TokenType.IntegerLiteral
-                    && CurrentToken().Lexeme == IntegerLimits.MaxLiteralMagnitudeLexeme)
-                {
-                    Advance();
-                    return long.MinValue;
-                }
-
-                long value = ParseUnaryExpression();
-                return checked(-value);
+                return new IntegerLiteralExpression(long.MinValue, pos);
             }
 
-            return ParsePrimaryExpression();
-        });
+            Expression operand = ParseUnaryExpression();
+            return new UnaryExpression(UnaryOperator.Negate, operand, pos);
+        }
+
+        return ParsePrimaryExpression();
     }
 
     /// <summary>
     /// primary_expression = integer_literal | "readInt", "(", ")" | identifier, "(", [ argument_list ], ")" | "(", expression, ")" ;
     /// </summary>
-    private long ParsePrimaryExpression()
+    private Expression ParsePrimaryExpression()
     {
         Token token = CurrentToken();
+
         if (token.Type == TokenType.IntegerLiteral)
         {
             if (token.Lexeme == IntegerLimits.MaxLiteralMagnitudeLexeme)
@@ -115,36 +98,41 @@ public sealed partial class Parser
             }
 
             Advance();
-            return checked((long)ulong.Parse(token.Lexeme));
+            long value = checked((long)ulong.Parse(token.Lexeme));
+            return new IntegerLiteralExpression(value, new SourcePosition(token.Line, token.Column));
         }
 
         if (token.Type == TokenType.ReadInt)
         {
+            SourcePosition pos = new SourcePosition(token.Line, token.Column);
             Advance();
             Consume(TokenType.LeftParen);
             Consume(TokenType.RightParen);
-            return _env.ReadInt();
+            return new CallExpression("readInt", new List<Expression>(), pos);
         }
 
         if (token.Type == TokenType.Identifier)
         {
             string funcName = token.Lexeme;
+            SourcePosition pos = new SourcePosition(token.Line, token.Column);
             Advance();
             Consume(TokenType.LeftParen);
-            List<long> args = new List<long>();
+
+            List<Expression> args = new List<Expression>();
             if (CurrentToken().Type != TokenType.RightParen)
             {
                 args = ParseArgumentList();
             }
 
             Consume(TokenType.RightParen);
-            return EvaluateBuiltinFunction(funcName, args, token);
+            ValidateBuiltinFunction(funcName, args.Count, token);
+            return new CallExpression(funcName, args, pos);
         }
 
         if (token.Type == TokenType.LeftParen)
         {
             Advance();
-            long value = ParseExpression();
+            Expression value = ParseExpression();
             Consume(TokenType.RightParen);
             return value;
         }
@@ -155,9 +143,9 @@ public sealed partial class Parser
     /// <summary>
     /// argument_list = expression, { ",", expression } ;
     /// </summary>
-    private List<long> ParseArgumentList()
+    private List<Expression> ParseArgumentList()
     {
-        List<long> args = new List<long>();
+        List<Expression> args = new List<Expression>();
         args.Add(ParseExpression());
         while (CurrentToken().Type == TokenType.Comma)
         {
@@ -166,5 +154,21 @@ public sealed partial class Parser
         }
 
         return args;
+    }
+
+    /// <summary>
+    /// Проверяет имя и арность встроенной функции при разборе.
+    /// </summary>
+    private void ValidateBuiltinFunction(string funcName, int argCount, Token token)
+    {
+        if (!BuiltinFunctionRegistry.TryGet(funcName, out BuiltinFunctionInfo? info) || info is null)
+        {
+            throw new ParserException($"Неизвестная встроенная функция '{funcName}'", token);
+        }
+
+        if (argCount != info.Arity)
+        {
+            throw new ParserException($"Функция '{funcName}': Ожидаемое количество аргументов: {info.Arity}", token);
+        }
     }
 }

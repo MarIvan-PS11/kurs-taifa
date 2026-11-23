@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 
+using MiniSharp.Execution;
+using MiniSharp.Interpreter;
 using MiniSharp.Lexer;
 using MiniSharp.Parser;
 using Xunit;
