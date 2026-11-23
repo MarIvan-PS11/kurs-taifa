@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Lexer/Lexer.csproj" />
+    <Project Path="src/Ast/Ast.csproj" />
     <Project Path="src/Parser/Parser.csproj" />
   </Folder>
   <Folder Name="/src/Interpreter/">
