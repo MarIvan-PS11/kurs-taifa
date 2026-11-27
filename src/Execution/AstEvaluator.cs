@@ -7,34 +7,45 @@ using MiniSharp.Ast;
 using MiniSharp.Lexer;
 
 /// <summary>
-/// Вычислитель AST со стеком значений. Реализует паттерн Visitor.
+/// Вычислитель AST, реализующий паттерн Visitor и управляющий областями видимости.
 /// </summary>
 public sealed class AstEvaluator : IAstVisitor
 {
-    private readonly Stack<long> _values = new();
+    private readonly Stack<Dictionary<string, long>> _scopes = new();
+    private readonly Dictionary<string, FunctionDeclaration> _functions = new();
     private readonly IEnvironment _env;
+    private long _lastExpressionValue;
 
     /// <summary>
-    /// Создаёт вычислитель с указанным окружением ввода-вывода.
+    /// Инициализирует вычислитель с указанным окружением.
     /// </summary>
     public AstEvaluator(IEnvironment env)
     {
         _env = env;
+        EnterScope();
     }
 
     /// <summary>
-    /// Выполняет программу.
+    /// Запускает вычисление программы.
     /// </summary>
     public void Evaluate(ProgramNode program)
     {
-        program.Accept(this);
+        foreach (FunctionDeclaration func in program.Functions)
+        {
+            _functions[func.Name] = func;
+        }
+
+        try
+        {
+            program.Accept(this);
+        }
+        catch (ReturnException)
+        {
+        }
     }
 
     /// <inheritdoc />
-    public void Visit(ProgramNode node)
-    {
-        node.Main.Accept(this);
-    }
+    public void Visit(ProgramNode node) => node.Main.Accept(this);
 
     /// <inheritdoc />
     public void Visit(FunctionDeclaration node)
@@ -45,71 +56,115 @@ public sealed class AstEvaluator : IAstVisitor
     /// <inheritdoc />
     public void Visit(BlockStatement node)
     {
-        foreach (Statement statement in node.Statements)
+        EnterScope();
+        try
         {
-            statement.Accept(this);
+            foreach (Statement stmt in node.Statements)
+            {
+                stmt.Accept(this);
+            }
         }
+        finally
+        {
+            ExitScope();
+        }
+    }
+
+    /// <inheritdoc />
+    public void Visit(VariableDeclarationStatement node)
+    {
+        node.Initializer.Accept(this);
+
+        if (_scopes.Peek().ContainsKey(node.Name))
+        {
+            throw new InterpreterException($"Переменная '{node.Name}' уже объявлена в этой области", node.Position);
+        }
+
+        _scopes.Peek()[node.Name] = _lastExpressionValue;
+    }
+
+    /// <inheritdoc />
+    public void Visit(ReturnStatement node)
+    {
+        if (node.Value != null)
+        {
+            node.Value.Accept(this);
+            throw new ReturnException(_lastExpressionValue);
+        }
+
+        throw new ReturnException(0);
     }
 
     /// <inheritdoc />
     public void Visit(PrintStatement node)
     {
         node.Value.Accept(this);
-        long value = _values.Pop();
-        _env.Print(value);
+        _env.Print(_lastExpressionValue);
     }
 
     /// <inheritdoc />
     public void Visit(ExpressionStatement node)
     {
         node.Expression.Accept(this);
-
-        if (_values.Count > 0)
-        {
-            _values.Pop();
-        }
     }
 
     /// <inheritdoc />
     public void Visit(IntegerLiteralExpression node)
     {
-        _values.Push(node.Value);
+        _lastExpressionValue = node.Value;
+    }
+
+    /// <inheritdoc />
+    public void Visit(IdentifierExpression node)
+    {
+        if (!TryGetValue(node.Name, out long value))
+        {
+            throw new InterpreterException($"Переменная '{node.Name}' не объявлена", node.Position);
+        }
+
+        _lastExpressionValue = value;
     }
 
     /// <inheritdoc />
     public void Visit(UnaryExpression node)
     {
         node.Operand.Accept(this);
-        long operand = _values.Pop();
-
-        long result = node.Operator switch
+        long operand = _lastExpressionValue;
+        _lastExpressionValue = node.Operator switch
         {
             UnaryOperator.Negate => EvaluateChecked(() => checked(-operand), node.Position),
-            _ => throw new InterpreterException($"Неизвестный унарный оператор '{node.Operator}'", node.Position),
+            _ => throw new InterpreterException("Неизвестный унарный оператор", node.Position),
         };
-
-        _values.Push(result);
     }
 
     /// <inheritdoc />
     public void Visit(BinaryExpression node)
     {
+        if (node.Operator == BinaryOperator.Assign)
+        {
+            if (node.Left is not IdentifierExpression id)
+            {
+                throw new InterpreterException("Левая часть присваивания должна быть идентификатором", node.Position);
+            }
+
+            node.Right.Accept(this);
+            SetValue(id.Name, _lastExpressionValue, node.Position);
+            return;
+        }
+
         node.Left.Accept(this);
+        long left = _lastExpressionValue;
         node.Right.Accept(this);
+        long right = _lastExpressionValue;
 
-        long right = _values.Pop();
-        long left = _values.Pop();
-
-        long result = node.Operator switch
+        _lastExpressionValue = node.Operator switch
         {
             BinaryOperator.Add => EvaluateChecked(() => checked(left + right), node.Position),
             BinaryOperator.Subtract => EvaluateChecked(() => checked(left - right), node.Position),
             BinaryOperator.Multiply => EvaluateChecked(() => checked(left * right), node.Position),
             BinaryOperator.Divide => EvaluateDivision(left, right, node.Position),
-            _ => throw new InterpreterException($"Неизвестный бинарный оператор '{node.Operator}'", node.Position),
+            _ => throw new InterpreterException("Неизвестный оператор", node.Position),
         };
-
-        _values.Push(result);
     }
 
     /// <inheritdoc />
@@ -117,14 +172,47 @@ public sealed class AstEvaluator : IAstVisitor
     {
         if (node.FunctionName == "readInt")
         {
-            if (node.Arguments.Count != 0)
+            _lastExpressionValue = _env.ReadInt();
+            return;
+        }
+
+        if (_functions.TryGetValue(node.FunctionName, out FunctionDeclaration? funcDecl))
+        {
+            if (node.Arguments.Count != funcDecl.Parameters.Count)
             {
-                throw new InterpreterException(
-                    $"Функция 'readInt': Ожидаемое количество аргументов: 0",
-                    node.Position);
+                throw new InterpreterException($"Функция '{node.FunctionName}': неверное число аргументов", node.Position);
             }
 
-            _values.Push(_env.ReadInt());
+            long[] argValues = new long[node.Arguments.Count];
+            for (int i = 0; i < node.Arguments.Count; i++)
+            {
+                node.Arguments[i].Accept(this);
+                argValues[i] = _lastExpressionValue;
+            }
+
+            EnterScope();
+            try
+            {
+                for (int i = 0; i < funcDecl.Parameters.Count; i++)
+                {
+                    _scopes.Peek()[funcDecl.Parameters[i]] = argValues[i];
+                }
+
+                try
+                {
+                    funcDecl.Body.Accept(this);
+                    _lastExpressionValue = 0;
+                }
+                catch (ReturnException ex)
+                {
+                    _lastExpressionValue = ex.Value;
+                }
+            }
+            finally
+            {
+                ExitScope();
+            }
+
             return;
         }
 
@@ -132,21 +220,49 @@ public sealed class AstEvaluator : IAstVisitor
         for (int i = 0; i < node.Arguments.Count; i++)
         {
             node.Arguments[i].Accept(this);
-            args[i] = _values.Pop();
+            args[i] = _lastExpressionValue;
         }
 
         if (!BuiltinImplementations.TryGet(node.FunctionName, out Func<IReadOnlyList<long>, long>? impl) || impl is null)
         {
-            throw new InterpreterException($"Неизвестная встроенная функция '{node.FunctionName}'", node.Position);
+            throw new InterpreterException($"Неизвестная функция '{node.FunctionName}'", node.Position);
         }
 
-        long result = EvaluateChecked(() => impl(args), node.Position);
-        _values.Push(result);
+        _lastExpressionValue = EvaluateChecked(() => impl(args), node.Position);
     }
 
-    /// <summary>
-    /// Обрабатывает деление с отдельной диагностикой деления на ноль.
-    /// </summary>
+    private void EnterScope() => _scopes.Push(new Dictionary<string, long>());
+
+    private void ExitScope() => _scopes.Pop();
+
+    private void SetValue(string name, long value, SourcePosition position)
+    {
+        foreach (Dictionary<string, long> scope in _scopes)
+        {
+            if (scope.ContainsKey(name))
+            {
+                scope[name] = value;
+                return;
+            }
+        }
+
+        throw new InterpreterException($"Переменная '{name}' не объявлена", position);
+    }
+
+    private bool TryGetValue(string name, out long value)
+    {
+        foreach (Dictionary<string, long> scope in _scopes)
+        {
+            if (scope.TryGetValue(name, out value))
+            {
+                return true;
+            }
+        }
+
+        value = 0;
+        return false;
+    }
+
     private static long EvaluateDivision(long left, long right, SourcePosition position)
     {
         if (right == 0)
@@ -157,9 +273,6 @@ public sealed class AstEvaluator : IAstVisitor
         return EvaluateChecked(() => checked(left / right), position);
     }
 
-    /// <summary>
-    /// Выполняет вычисление и преобразует OverflowException в ошибку выполнения.
-    /// </summary>
     private static long EvaluateChecked(Func<long> evaluation, SourcePosition position)
     {
         try

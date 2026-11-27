@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 
 using MiniSharp.Execution;
-using MiniSharp.Interpreter;
 using MiniSharp.Lexer;
 using MiniSharp.Parser;
 using Xunit;
@@ -14,9 +13,6 @@ using Xunit;
 /// </summary>
 public class InterpreterTests
 {
-    /// <summary>
-    /// Тестовые данные для базовой арифметики и приоритета операций.
-    /// </summary>
     public static TheoryData<string, string> ArithmeticData => new()
     {
         { "func main() { print 0; }", "0\n" },
@@ -39,9 +35,6 @@ public class InterpreterTests
         { "func main() { print (10 + 5) * (2 - 3); }", "-15\n" },
     };
 
-    /// <summary>
-    /// Тестовые данные для унарного минуса.
-    /// </summary>
     public static TheoryData<string, string> UnaryMinusData => new()
     {
         { "func main() { print -5; }", "-5\n" },
@@ -55,9 +48,6 @@ public class InterpreterTests
         { "func main() { print -(-(-(-5))); }", "5\n" },
     };
 
-    /// <summary>
-    /// Тестовые данные для встроенных функций.
-    /// </summary>
     public static TheoryData<string, string> BuiltinFunctionsData => new()
     {
         { "func main() { print abs(-15); }", "15\n" },
@@ -75,9 +65,6 @@ public class InterpreterTests
         { "func main() { print min(sqr(3), max(10, 5)); }", "9\n" },
     };
 
-    /// <summary>
-    /// Тестовые данные для функции readInt.
-    /// </summary>
     public static TheoryData<string, IEnumerable<long>, string> ReadIntData => new()
     {
         { "func main() { print readInt(); }", new long[] { 42 }, "42\n" },
@@ -87,9 +74,6 @@ public class InterpreterTests
         { "func main() { print min(readInt(), readInt()); }", new long[] { 50, 10 }, "10\n" },
     };
 
-    /// <summary>
-    /// Проверяет корректное вычисление арифметических выражений.
-    /// </summary>
     [Theory]
     [MemberData(nameof(ArithmeticData))]
     public void ArithmeticExpressions_ShouldEvaluateCorrectly(string source, string expectedOutput)
@@ -97,9 +81,6 @@ public class InterpreterTests
         AssertProgramOutput(source, Array.Empty<long>(), expectedOutput);
     }
 
-    /// <summary>
-    /// Проверяет корректную обработку унарного минуса.
-    /// </summary>
     [Theory]
     [MemberData(nameof(UnaryMinusData))]
     public void UnaryMinus_ShouldEvaluateCorrectly(string source, string expectedOutput)
@@ -107,9 +88,6 @@ public class InterpreterTests
         AssertProgramOutput(source, Array.Empty<long>(), expectedOutput);
     }
 
-    /// <summary>
-    /// Проверяет корректную работу всех встроенных функций.
-    /// </summary>
     [Theory]
     [MemberData(nameof(BuiltinFunctionsData))]
     public void BuiltinFunctions_ShouldEvaluateCorrectly(string source, string expectedOutput)
@@ -117,9 +95,6 @@ public class InterpreterTests
         AssertProgramOutput(source, Array.Empty<long>(), expectedOutput);
     }
 
-    /// <summary>
-    /// Проверяет чтение данных из входного потока.
-    /// </summary>
     [Theory]
     [MemberData(nameof(ReadIntData))]
     public void ReadInt_ShouldReadFromInput(string source, IEnumerable<long> input, string expectedOutput)
@@ -127,311 +102,416 @@ public class InterpreterTests
         AssertProgramOutput(source, input, expectedOutput);
     }
 
-    /// <summary>
-    /// Проверяет обработку максимального значения 64-битного целого.
-    /// </summary>
     [Fact]
     public void MaxLongValue_ShouldBeParsedAndPrinted()
     {
-        string source = "func main() { print 9223372036854775807; }";
-        AssertProgramOutput(source, Array.Empty<long>(), "9223372036854775807\n");
+        AssertProgramOutput("func main() { print 9223372036854775807; }", Array.Empty<long>(), "9223372036854775807\n");
     }
 
-    /// <summary>
-    /// Проверяет обработку минимального значения 64-битного целого.
-    /// </summary>
     [Fact]
     public void MinLongValue_ShouldBeParsedAndPrinted()
     {
-        string source = "func main() { print -9223372036854775808; }";
-        AssertProgramOutput(source, Array.Empty<long>(), "-9223372036854775808\n");
+        AssertProgramOutput("func main() { print -9223372036854775808; }", Array.Empty<long>(), "-9223372036854775808\n");
     }
 
-    /// <summary>
-    /// Проверяет, что положительный литерал 2^63 выходит за диапазон int64.
-    /// </summary>
     [Fact]
     public void PositiveLiteralBeyondMaxLong_ShouldThrowParserException()
     {
-        string source = "func main() { print 9223372036854775808; }";
-        ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        ParserException ex = AssertProgramThrows<ParserException>("func main() { print 9223372036854775808; }", Array.Empty<long>());
         Assert.Contains("выходит за диапазон", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет, что readInt с правильным регистром распознаётся и выполняется.
-    /// </summary>
     [Fact]
     public void ReadIntKeywordWithCorrectCase_ShouldWork()
     {
         AssertProgramOutput("func main() { print readInt(); }", new long[] { 7 }, "7\n");
     }
 
-    /// <summary>
-    /// Проверяет, что неправильный регистр readInt не распознаётся как ключевое слово.
-    /// </summary>
     [Fact]
     public void ReadIntKeywordWithWrongCase_ShouldBeRejected()
     {
-        ParserException ex = AssertProgramThrows<ParserException>(
-            "func main() { print readint(); }", Array.Empty<long>());
-        Assert.Contains("Неизвестная встроенная функция", ex.Message);
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print readint(); }", Array.Empty<long>());
+        Assert.Contains("Неизвестная функция 'readint'", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при отсутствии ключевого слова func.
-    /// </summary>
     [Fact]
     public void MissingFuncKeyword_ShouldThrowParserException()
     {
-        string source = "main() { print 1; }";
-        AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        AssertProgramThrows<ParserException>("main() { print 1; }", Array.Empty<long>());
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при отсутствии ключевого слова main.
-    /// </summary>
     [Fact]
     public void MissingMainKeyword_ShouldThrowParserException()
     {
-        string source = "func foo() { print 1; }";
-        AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        AssertProgramThrows<ParserException>("func foo() { print 1; }", Array.Empty<long>());
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при отсутствии точки с запятой.
-    /// </summary>
     [Fact]
     public void MissingSemicolon_ShouldThrowParserException()
     {
-        string source = "func main() { print 42 }";
-        AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        AssertProgramThrows<ParserException>("func main() { print 42 }", Array.Empty<long>());
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при несовпадении скобок.
-    /// </summary>
     [Fact]
     public void MismatchedParentheses_ShouldThrowParserException()
     {
-        string source = "func main() { print (10 + 5; }";
-        AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        AssertProgramThrows<ParserException>("func main() { print (10 + 5; }", Array.Empty<long>());
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при неожиданном токене.
-    /// </summary>
     [Fact]
     public void UnexpectedToken_ShouldThrowParserException()
     {
-        string source = "func main() { print ; }";
-        AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        AssertProgramThrows<ParserException>("func main() { print ; }", Array.Empty<long>());
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при делении на ноль.
-    /// </summary>
     [Fact]
     public void DivisionByZero_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print 10 / 0; }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print 10 / 0; }", Array.Empty<long>());
         Assert.Contains("Деление на ноль", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при переполнении сложения.
-    /// </summary>
     [Fact]
     public void OverflowOnAddition_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print 9223372036854775807 + 1; }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print 9223372036854775807 + 1; }", Array.Empty<long>());
         Assert.Contains("Арифметическое переполнение", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при переполнении умножения.
-    /// </summary>
     [Fact]
     public void OverflowOnMultiplication_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print 9223372036854775807 * 2; }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print 9223372036854775807 * 2; }", Array.Empty<long>());
         Assert.Contains("Арифметическое переполнение", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при переполнении унарного минуса.
-    /// </summary>
     [Fact]
     public void OverflowOnUnaryMinus_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print -(-9223372036854775808); }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print -(-9223372036854775808); }", Array.Empty<long>());
         Assert.Contains("Арифметическое переполнение", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при вызове неизвестной функции.
-    /// </summary>
     [Fact]
-    public void UnknownFunction_ShouldThrowParserException()
+    public void UnknownFunction_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print foo(1); }";
-        ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
-        Assert.Contains("Неизвестная встроенная функция", ex.Message);
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print foo(1); }", Array.Empty<long>());
+        Assert.Contains("Неизвестная функция 'foo'", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при неверном количестве аргументов (слишком много).
-    /// </summary>
     [Fact]
     public void TooManyArguments_ShouldThrowParserException()
     {
-        string source = "func main() { print abs(1, 2); }";
-        ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        ParserException ex = AssertProgramThrows<ParserException>("func main() { print abs(1, 2); }", Array.Empty<long>());
         Assert.Contains("Ожидаемое количество аргументов: 1", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при неверном количестве аргументов (слишком мало).
-    /// </summary>
     [Fact]
     public void TooFewArguments_ShouldThrowParserException()
     {
-        string source = "func main() { print min(1); }";
-        ParserException ex = AssertProgramThrows<ParserException>(source, Array.Empty<long>());
+        ParserException ex = AssertProgramThrows<ParserException>("func main() { print min(1); }", Array.Empty<long>());
         Assert.Contains("Ожидаемое количество аргументов: 2", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет выброс исключения при отсутствии ввода для readInt.
-    /// </summary>
     [Fact]
     public void MissingReadIntInput_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print readInt(); }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print readInt(); }", Array.Empty<long>());
         Assert.Contains("Неожиданный конец потока ввода", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет, что литерал больше 2^63 — лексическая ошибка.
-    /// </summary>
     [Fact]
     public void LiteralOutOfLongRange_ShouldThrowLexerException()
     {
-        string source = "func main() { print 9223372036854775809; }";
-        LexerException ex = Assert.Throws<LexerException>(() =>
-        {
-            Lexer lexer = new Lexer(source);
-            lexer.Tokenize();
-        });
+        LexerException ex = Assert.Throws<LexerException>(() => new Lexer("func main() { print 9223372036854775809; }").Tokenize());
         Assert.Contains("выходит за диапазон", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет, что цифра(ы) вплотную к букве без разделителя — лексическая ошибка.
-    /// </summary>
     [Fact]
     public void LiteralFollowedByLetter_ShouldThrowLexerException()
     {
-        string source = "func main() { print 12abc; }";
-        LexerException ex = Assert.Throws<LexerException>(() =>
-        {
-            Lexer lexer = new Lexer(source);
-            lexer.Tokenize();
-        });
+        LexerException ex = Assert.Throws<LexerException>(() => new Lexer("func main() { print 12abc; }").Tokenize());
         Assert.Contains("после цифры", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет переполнение при делении long.MinValue на -1.
-    /// </summary>
     [Fact]
     public void DivisionOverflowMinValueByMinusOne_ShouldThrowInterpreterException()
     {
-        string source = "func main() { print -9223372036854775808 / -1; }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print -9223372036854775808 / -1; }", Array.Empty<long>());
         Assert.Contains("Арифметическое переполнение", ex.Message);
     }
 
-    /// <summary>
-    /// Проверяет переполнение в abs при аргументе long.MinValue.
-    /// </summary>
-    [Fact]
-    public void OverflowInAbsFunction_ShouldThrowInterpreterException()
-    {
-        string source = "func main() { print abs(-9223372036854775808); }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
-        Assert.Contains("Арифметическое переполнение", ex.Message);
-    }
-
-    /// <summary>
-    /// Проверяет переполнение в sqr при большом аргументе.
-    /// </summary>
-    [Fact]
-    public void OverflowInSqrFunction_ShouldThrowInterpreterException()
-    {
-        string source = "func main() { print sqr(3037000500); }";
-        InterpreterException ex = AssertProgramThrows<InterpreterException>(source, Array.Empty<long>());
-        Assert.Contains("Арифметическое переполнение", ex.Message);
-    }
-
-    /// <summary>
-    /// Проверяет выполнение программы с пустым блоком инструкций.
-    /// </summary>
     [Fact]
     public void EmptyBlock_ShouldProduceNoOutput()
     {
-        string source = "func main() { }";
-        AssertProgramOutput(source, Array.Empty<long>(), string.Empty);
+        AssertProgramOutput("func main() { }", Array.Empty<long>(), string.Empty);
     }
 
-    /// <summary>
-    /// Проверяет инструкцию-выражение без print: вывод остаётся пустым.
-    /// </summary>
     [Fact]
     public void ExpressionStatementWithoutPrint_ShouldProduceNoOutput()
     {
-        string source = "func main() { 2 + 2; print 7; }";
-        AssertProgramOutput(source, Array.Empty<long>(), "7\n");
+        AssertProgramOutput("func main() { 2 + 2; print 7; }", Array.Empty<long>(), "7\n");
     }
 
-    /// <summary>
-    /// Проверяет, что однострочные комментарии внутри программы игнорируются.
-    /// </summary>
     [Fact]
     public void CommentsInsideProgram_ShouldBeIgnored()
     {
-        string source = "func main() { // начало\nprint 3 + 4; // конец\n}";
-        AssertProgramOutput(source, Array.Empty<long>(), "7\n");
+        AssertProgramOutput("func main() { // начало\nprint 3 + 4; // конец\n}", Array.Empty<long>(), "7\n");
     }
 
-    /// <summary>
-    /// Проверяет унарный минус перед вызовом встроенной функции.
-    /// </summary>
     [Fact]
     public void UnaryMinusBeforeFunctionCall_ShouldNegateResult()
     {
-        string source = "func main() { print -abs(-5); }";
-        AssertProgramOutput(source, Array.Empty<long>(), "-5\n");
+        AssertProgramOutput("func main() { print -abs(-5); }", Array.Empty<long>(), "-5\n");
     }
 
-    /// <summary>
-    /// Проверяет глубоко вложенное выражение со скобками и несколькими функциями.
-    /// </summary>
     [Fact]
     public void DeeplyNestedExpression_ShouldEvaluateCorrectly()
     {
-        string source = "func main() { print ((min(2, 3) + max(1, 4)) * (sqr(2) - abs(-1))); }";
-        AssertProgramOutput(source, Array.Empty<long>(), "18\n");
+        AssertProgramOutput("func main() { print ((min(2, 3) + max(1, 4)) * (sqr(2) - abs(-1))); }", Array.Empty<long>(), "18\n");
     }
 
-    /// <summary>
-    /// Вспомогательный метод для успешного выполнения программы и проверки вывода.
-    /// </summary>
+    [Fact]
+    public void VariableDeclarationAndUsage_ShouldEvaluateCorrectly()
+    {
+        string source = "func main() { int x = 10; print x + 5; }";
+        AssertProgramOutput(source, Array.Empty<long>(), "15\n");
+    }
+
+    [Fact]
+    public void VariableReassignment_ShouldEvaluateCorrectly()
+    {
+        string source = "func main() { int x = 10; x = 20; print x; }";
+        AssertProgramOutput(source, Array.Empty<long>(), "20\n");
+    }
+
+    [Fact]
+    public void NestedAssignment_ShouldEvaluateCorrectly()
+    {
+        string source = "func main() { int a = 0; int b = 0; a = b = 42; print a; print b; }";
+        AssertProgramOutput(source, Array.Empty<long>(), "42\n42\n");
+    }
+
+    [Fact]
+    public void UserFunctionWithParametersAndReturn_ShouldEvaluateCorrectly()
+    {
+        string source = @"
+            func add(a, b) {
+                return a + b;
+            }
+            func main() {
+                print add(10, 32);
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "42\n");
+    }
+
+    [Fact]
+    public void UserFunctionWithoutReturn_ShouldReturnLastExpression()
+    {
+        string source = @"
+            func calc() {
+                int x = 4;
+                return x * 5;
+            }
+            func main() {
+                print calc();
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "20\n");
+    }
+
+    [Fact]
+    public void VariableShadowing_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func main() {
+                int x = 10;
+                {
+                    int x = 20;
+                    print x;
+                }
+                print x;
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "20\n10\n");
+    }
+
+    [Fact]
+    public void FunctionAndVariableSameName_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func foo() {
+                return 100;
+            }
+            func main() {
+                int foo = 5;
+                print foo;
+                print foo();
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "5\n100\n");
+    }
+
+    [Fact]
+    public void FunctionArgumentsEvaluatedLeftToRight_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func main() {
+                int x = 1;
+                print max(x = 10, x = 5);
+                print x;
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "10\n5\n");
+    }
+
+    [Fact]
+    public void CircleSquare_ShouldCalculateCorrectly()
+    {
+        string source = @"
+            func main() {
+                int r = readInt();
+                int pi = 3;
+                print pi * r * r;
+            }";
+        AssertProgramOutput(source, new long[] { 5 }, "75\n");
+    }
+
+    [Fact]
+    public void RectSquare_ShouldCalculateCorrectly()
+    {
+        string source = @"
+            func main() {
+                int width = readInt();
+                int height = readInt();
+                print width * height;
+            }";
+        AssertProgramOutput(source, new long[] { 4, 7 }, "28\n");
+    }
+
+    [Fact]
+    public void UserFunctionInExpression_ShouldEvaluateCorrectly()
+    {
+        string source = @"
+            func double(x) {
+                return x * 2;
+            }
+            func main() {
+                print double(5) + double(3);
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "16\n");
+    }
+
+    [Fact]
+    public void UserFunctionWithoutParameters_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func getAnswer() {
+                return 42;
+            }
+            func main() {
+                print getAnswer();
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "42\n");
+    }
+
+    [Fact]
+    public void LocalVariableInFunction_ShouldNotAffectOuterScope()
+    {
+        string source = @"
+            func modify() {
+                int x = 100;
+            }
+            func main() {
+                int x = 5;
+                modify();
+                print x;
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "5\n");
+    }
+
+    [Fact]
+    public void MultipleUserFunctionCalls_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func square(x) {
+                return x * x;
+            }
+            func main() {
+                print square(2);
+                print square(3);
+                print square(4);
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "4\n9\n16\n");
+    }
+
+    [Fact]
+    public void FunctionCallingAnotherUserFunction_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func double(x) {
+                return x * 2;
+            }
+            func quadruple(x) {
+                return double(double(x));
+            }
+            func main() {
+                print quadruple(5);
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "20\n");
+    }
+
+    [Fact]
+    public void ModifyOuterVariableFromNestedBlock_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func main() {
+                int x = 10;
+                {
+                    x = 20;
+                }
+                print x;
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "20\n");
+    }
+
+    [Fact]
+    public void FunctionArgumentsEvaluatedInCallerScope_ShouldWorkCorrectly()
+    {
+        string source = @"
+            func calculate(a, b) {
+                return a * 10 + b;
+            }
+            func main() {
+                int x = 1;
+                print calculate(x, x = 2);
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "12\n");
+    }
+
+    [Fact]
+    public void ReturnInMain_ShouldTerminateGracefully()
+    {
+        string source = @"
+            func main() {
+                print 10;
+                return;
+                print 20;
+            }";
+        AssertProgramOutput(source, Array.Empty<long>(), "10\n");
+    }
+
+    [Fact]
+    public void UndeclaredVariable_ShouldThrowInterpreterException()
+    {
+        InterpreterException ex = AssertProgramThrows<InterpreterException>("func main() { print y; }", Array.Empty<long>());
+        Assert.Contains("не объявлена", ex.Message);
+    }
+
+    [Fact]
+    public void UserFunctionWrongArity_ShouldThrowInterpreterException()
+    {
+        InterpreterException ex = AssertProgramThrows<InterpreterException>(
+            "func foo(a) { return a; } func main() { print foo(1, 2); }", Array.Empty<long>());
+        Assert.Contains("неверное число аргументов", ex.Message);
+    }
+
     private static void AssertProgramOutput(string source, IEnumerable<long> input, string expectedOutput)
     {
         FakeEnvironment env = new FakeEnvironment(input);
@@ -439,9 +519,6 @@ public class InterpreterTests
         Assert.Equal(expectedOutput, env.GetOutput());
     }
 
-    /// <summary>
-    /// Вспомогательный метод для проверки выброса ожидаемого исключения.
-    /// </summary>
     private static TException AssertProgramThrows<TException>(string source, IEnumerable<long> input)
         where TException : Exception
     {

@@ -1,23 +1,31 @@
 namespace MiniSharp.Ast;
 
+using System.Collections.Generic;
+
 using MiniSharp.Lexer;
 
 /// <summary>
-/// Корневой узел программы: содержит объявление функции main.
+/// Корневой узел AST, представляющий всю программу.
 /// </summary>
 public sealed class ProgramNode : AstNode
 {
     /// <summary>
-    /// Создаёт корневой узел программы.
+    /// Инициализирует новый экземпляр корневого узла программы.
     /// </summary>
-    public ProgramNode(FunctionDeclaration main, SourcePosition position)
+    public ProgramNode(IReadOnlyList<FunctionDeclaration> functions, FunctionDeclaration main, SourcePosition position)
         : base(position)
     {
+        Functions = functions;
         Main = main;
     }
 
     /// <summary>
-    /// Объявление функции main.
+    /// Список пользовательских функций, объявленных до main.
+    /// </summary>
+    public IReadOnlyList<FunctionDeclaration> Functions { get; }
+
+    /// <summary>
+    /// Объявление главной функции main.
     /// </summary>
     public FunctionDeclaration Main { get; }
 

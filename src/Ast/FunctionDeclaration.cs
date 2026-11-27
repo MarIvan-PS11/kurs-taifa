@@ -1,19 +1,22 @@
 namespace MiniSharp.Ast;
 
+using System.Collections.Generic;
+
 using MiniSharp.Lexer;
 
 /// <summary>
-/// Объявление функции с именем и телом.
+/// Узел AST, представляющий объявление пользовательской функции.
 /// </summary>
 public sealed class FunctionDeclaration : Declaration
 {
     /// <summary>
-    /// Создаёт объявление функции.
+    /// Инициализирует новый экземпляр объявления функции.
     /// </summary>
-    public FunctionDeclaration(string name, BlockStatement body, SourcePosition position)
+    public FunctionDeclaration(string name, IReadOnlyList<string> parameters, BlockStatement body, SourcePosition position)
         : base(position)
     {
         Name = name;
+        Parameters = parameters;
         Body = body;
     }
 
@@ -23,7 +26,12 @@ public sealed class FunctionDeclaration : Declaration
     public string Name { get; }
 
     /// <summary>
-    /// Тело функции в виде блока инструкций.
+    /// Список имен параметров функции.
+    /// </summary>
+    public IReadOnlyList<string> Parameters { get; }
+
+    /// <summary>
+    /// Тело функции.
     /// </summary>
     public BlockStatement Body { get; }
 

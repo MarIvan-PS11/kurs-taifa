@@ -14,7 +14,7 @@ public sealed partial class Parser
     private int _position;
 
     /// <summary>
-    /// Создаёт парсер для указанного потока токенов.
+    /// Инициализирует парсер для указанного потока токенов.
     /// </summary>
     public Parser(List<Token> tokens)
     {
@@ -23,11 +23,23 @@ public sealed partial class Parser
     }
 
     /// <summary>
-    /// program = "func", "main", "(", ")", block, end_of_file ;
+    /// Разбирает всю программу, включая пользовательские функции и main.
     /// </summary>
     public ProgramNode ParseProgram()
     {
         SourcePosition startPos = new SourcePosition(CurrentToken().Line, CurrentToken().Column);
+        List<FunctionDeclaration> functions = new List<FunctionDeclaration>();
+
+        while (CurrentToken().Type == TokenType.Func)
+        {
+            if (PeekNext().Type == TokenType.Main)
+            {
+                break;
+            }
+
+            functions.Add(ParseFunctionDeclaration());
+        }
+
         Consume(TokenType.Func);
         Consume(TokenType.Main);
         Consume(TokenType.LeftParen);
@@ -35,19 +47,53 @@ public sealed partial class Parser
         BlockStatement body = ParseBlock();
         Consume(TokenType.Eof);
 
-        FunctionDeclaration mainFunc = new FunctionDeclaration("main", body, startPos);
-        return new ProgramNode(mainFunc, startPos);
+        FunctionDeclaration mainFunc = new FunctionDeclaration("main", new List<string>(), body, startPos);
+        return new ProgramNode(functions, mainFunc, startPos);
     }
 
-    private Token CurrentToken()
+    private Token PeekNext()
     {
-        if (_position >= _tokens.Count)
+        int nextPos = _position + 1;
+        return nextPos < _tokens.Count ? _tokens[nextPos] : _tokens[_tokens.Count - 1];
+    }
+
+    private FunctionDeclaration ParseFunctionDeclaration()
+    {
+        SourcePosition pos = new SourcePosition(CurrentToken().Line, CurrentToken().Column);
+        Consume(TokenType.Func);
+        string name = CurrentToken().Lexeme;
+        Consume(TokenType.Identifier);
+        Consume(TokenType.LeftParen);
+
+        List<string> parameters = new List<string>();
+        if (CurrentToken().Type != TokenType.RightParen)
         {
-            return _tokens[_tokens.Count - 1];
+            do
+            {
+                parameters.Add(CurrentToken().Lexeme);
+                Consume(TokenType.Identifier);
+            }
+            while (ConsumeIf(TokenType.Comma));
         }
 
-        return _tokens[_position];
+        Consume(TokenType.RightParen);
+        BlockStatement body = ParseBlock();
+
+        return new FunctionDeclaration(name, parameters, body, pos);
     }
+
+    private bool ConsumeIf(TokenType type)
+    {
+        if (CurrentToken().Type == type)
+        {
+            Advance();
+            return true;
+        }
+
+        return false;
+    }
+
+    private Token CurrentToken() => _position < _tokens.Count ? _tokens[_position] : _tokens[_tokens.Count - 1];
 
     private void Advance()
     {

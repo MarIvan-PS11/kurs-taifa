@@ -1,19 +1,32 @@
 namespace MiniSharp.Ast;
 
 /// <summary>
-/// Типы бинарных операторов.
+/// Перечисление бинарных операторов, используемых в узлах бинарных выражений AST.
 /// </summary>
 public enum BinaryOperator
 {
-    /// <summary>Сложение.</summary>
+    /// <summary>
+    /// Оператор сложения '+'.
+    /// </summary>
     Add,
 
-    /// <summary>Вычитание.</summary>
+    /// <summary>
+    /// Оператор вычитания '-'.
+    /// </summary>
     Subtract,
 
-    /// <summary>Умножение.</summary>
+    /// <summary>
+    /// Оператор умножения '*'.
+    /// </summary>
     Multiply,
 
-    /// <summary>Целочисленное деление.</summary>
+    /// <summary>
+    /// Оператор целочисленного деления '/'.
+    /// </summary>
     Divide,
+
+    /// <summary>
+    /// Оператор присваивания '=' (правоассоциативный).
+    /// </summary>
+    Assign,
 }

@@ -32,4 +32,13 @@ public interface IAstVisitor
 
     /// <summary>Посещает вызов функции (встроенной или пользовательской).</summary>
     void Visit(CallExpression node);
+
+    /// <summary>Посещает узел объявления переменной.</summary>
+    void Visit(VariableDeclarationStatement node);
+
+    /// <summary>Посещает узел инструкции возврата.</summary>
+    void Visit(ReturnStatement node);
+
+    /// <summary>Посещает узел чтения значения переменной.</summary>
+    void Visit(IdentifierExpression node);
 }

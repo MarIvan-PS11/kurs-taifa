@@ -1,5 +1,7 @@
 namespace MiniSharp.Lexer;
 
+using System;
+
 /// <summary>
 /// Исключение, возникающее при ошибках лексического анализа.
 /// </summary>

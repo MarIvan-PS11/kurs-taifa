@@ -1,30 +1,36 @@
 namespace MiniSharp.Lexer;
 
+using System.Collections.Generic;
+
 /// <summary>
-/// Вспомогательный класс для быстрого поиска ключевых слов.
+/// Реестр ключевых слов языка MiniSharp и соответствующих им типов токенов.
 /// </summary>
-internal static class Keywords
+public static class Keywords
 {
-    private static readonly Dictionary<string, TokenType> Map = new()
+    /// <summary>
+    /// Словарь соответствий между строковым представлением ключевого слова и его типом токена.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, TokenType> Map = new Dictionary<string, TokenType>
     {
+        { "func", TokenType.Func },
+        { "main", TokenType.Main },
+        { "return", TokenType.Return },
+        { "print", TokenType.Print },
+        { "readInt", TokenType.ReadInt },
+        { "int", TokenType.Int },
         { "let", TokenType.Let },
         { "if", TokenType.If },
         { "else", TokenType.Else },
         { "while", TokenType.While },
-        { "func", TokenType.Func },
-        { "return", TokenType.Return },
-        { "print", TokenType.Print },
-        { "readInt", TokenType.ReadInt },
         { "true", TokenType.True },
         { "false", TokenType.False },
-        { "main", TokenType.Main },
     };
 
     /// <summary>
-    /// Пытается получить тип токена для переданного текста.
+    /// Пытается получить тип токена для указанного слова, если оно является ключевым.
     /// </summary>
-    public static bool TryGetKeyword(string text, out TokenType type)
+    public static bool TryGetKeyword(string word, out TokenType tokenType)
     {
-        return Map.TryGetValue(text, out type);
+        return Map.TryGetValue(word, out tokenType);
     }
 }

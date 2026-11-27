@@ -1,12 +1,12 @@
 namespace MiniSharp.Lexer;
 
 /// <summary>
-/// Все типы токенов языка MiniSharp.
+/// Перечисление типов лексем (токенов), распознаваемых лексическим анализатором.
 /// </summary>
 public enum TokenType
 {
     /// <summary>
-    /// Идентификатор (имя переменной или функции).
+    /// Идентификатор (имя переменной или пользовательской функции).
     /// </summary>
     Identifier,
 
@@ -16,167 +16,172 @@ public enum TokenType
     IntegerLiteral,
 
     /// <summary>
-    /// Строковый литерал.
+    /// Строковый литерал (зарезервировано).
     /// </summary>
     StringLiteral,
 
     /// <summary>
-    /// Ключевое слово let.
-    /// </summary>
-    Let,
-
-    /// <summary>
-    /// Ключевое слово if.
-    /// </summary>
-    If,
-
-    /// <summary>
-    /// Ключевое слово else.
-    /// </summary>
-    Else,
-
-    /// <summary>
-    /// Ключевое слово while.
-    /// </summary>
-    While,
-
-    /// <summary>
-    /// Ключевое слово func.
-    /// </summary>
-    Func,
-
-    /// <summary>
-    /// Ключевое слово return.
-    /// </summary>
-    Return,
-
-    /// <summary>
-    /// Ключевое слово print.
-    /// </summary>
-    Print,
-
-    /// <summary>
-    /// Ключевое слово readInt.
-    /// </summary>
-    ReadInt,
-
-    /// <summary>
-    /// Ключевое слово true.
-    /// </summary>
-    True,
-
-    /// <summary>
-    /// Ключевое слово false.
-    /// </summary>
-    False,
-
-    /// <summary>
-    /// Ключевое слово main.
-    /// </summary>
-    Main,
-
-    /// <summary>
-    /// Оператор сложения (+).
+    /// Оператор сложения '+'.
     /// </summary>
     Plus,
 
     /// <summary>
-    /// Оператор вычитания (-).
+    /// Оператор вычитания или унарного минуса '-'.
     /// </summary>
     Minus,
 
     /// <summary>
-    /// Оператор умножения (*).
+    /// Оператор умножения '*'.
     /// </summary>
     Star,
 
     /// <summary>
-    /// Оператор деления (/).
+    /// Оператор деления '/'.
     /// </summary>
     Slash,
 
     /// <summary>
-    /// Оператор равенства (==).
-    /// </summary>
-    Equal,
-
-    /// <summary>
-    /// Оператор неравенства (!=).
-    /// </summary>
-    NotEqual,
-
-    /// <summary>
-    /// Оператор меньше (<).
-    /// </summary>
-    Less,
-
-    /// <summary>
-    /// Оператор больше (>).
-    /// </summary>
-    Greater,
-
-    /// <summary>
-    /// Оператор меньше или равно (<=).
-    /// </summary>
-    LessEqual,
-
-    /// <summary>
-    /// Оператор больше или равно (>=).
-    /// </summary>
-    GreaterEqual,
-
-    /// <summary>
-    /// Логическое И (&&).
-    /// </summary>
-    And,
-
-    /// <summary>
-    /// Логическое ИЛИ (||).
-    /// </summary>
-    Or,
-
-    /// <summary>
-    /// Логическое НЕ (!).
-    /// </summary>
-    Not,
-
-    /// <summary>
-    /// Оператор присваивания (=).
+    /// Оператор присваивания '='.
     /// </summary>
     Assign,
 
     /// <summary>
-    /// Левая фигурная скобка ({).
+    /// Оператор равенства '==' (зарезервировано).
     /// </summary>
-    LeftBrace,
+    Equal,
 
     /// <summary>
-    /// Правая фигурная скобка (}).
+    /// Оператор неравенства '!=' (зарезервировано).
     /// </summary>
-    RightBrace,
+    NotEqual,
 
     /// <summary>
-    /// Левая круглая скобка (( ).
+    /// Логическое отрицание '!' (зарезервировано).
+    /// </summary>
+    Not,
+
+    /// <summary>
+    /// Оператор 'меньше или равно' '<=' (зарезервировано).
+    /// </summary>
+    LessEqual,
+
+    /// <summary>
+    /// Оператор 'меньше' '<' (зарезервировано).
+    /// </summary>
+    Less,
+
+    /// <summary>
+    /// Оператор 'больше или равно' '>=' (зарезервировано).
+    /// </summary>
+    GreaterEqual,
+
+    /// <summary>
+    /// Оператор 'больше' '>' (зарезервировано).
+    /// </summary>
+    Greater,
+
+    /// <summary>
+    /// Логическое 'И' '&&' (зарезервировано).
+    /// </summary>
+    And,
+
+    /// <summary>
+    /// Логическое 'ИЛИ' '||' (зарезервировано).
+    /// </summary>
+    Or,
+
+    /// <summary>
+    /// Открывающая круглая скобка '('.
     /// </summary>
     LeftParen,
 
     /// <summary>
-    /// Правая круглая скобка () ).
+    /// Закрывающая круглая скобка ')'.
     /// </summary>
     RightParen,
 
     /// <summary>
-    /// Точка с запятой (;).
+    /// Открывающая фигурная скобка '{'.
+    /// </summary>
+    LeftBrace,
+
+    /// <summary>
+    /// Закрывающая фигурная скобка '}'.
+    /// </summary>
+    RightBrace,
+
+    /// <summary>
+    /// Точка с запятой ';'.
     /// </summary>
     Semicolon,
 
     /// <summary>
-    /// Запятая (,).
+    /// Запятая ','.
     /// </summary>
     Comma,
 
     /// <summary>
-    /// Конец файла (Eof).
+    /// Ключевое слово 'func'.
+    /// </summary>
+    Func,
+
+    /// <summary>
+    /// Ключевое слово 'main'.
+    /// </summary>
+    Main,
+
+    /// <summary>
+    /// Ключевое слово 'return'.
+    /// </summary>
+    Return,
+
+    /// <summary>
+    /// Ключевое слово 'print'.
+    /// </summary>
+    Print,
+
+    /// <summary>
+    /// Ключевое слово 'readInt'.
+    /// </summary>
+    ReadInt,
+
+    /// <summary>
+    /// Ключевое слово 'let' (зарезервировано).
+    /// </summary>
+    Let,
+
+    /// <summary>
+    /// Ключевое слово 'int' — единственный поддерживаемый тип данных.
+    /// </summary>
+    Int,
+
+    /// <summary>
+    /// Ключевое слово 'if' (зарезервировано).
+    /// </summary>
+    If,
+
+    /// <summary>
+    /// Ключевое слово 'else' (зарезервировано).
+    /// </summary>
+    Else,
+
+    /// <summary>
+    /// Ключевое слово 'while' (зарезервировано).
+    /// </summary>
+    While,
+
+    /// <summary>
+    /// Логический литерал 'true' (зарезервировано).
+    /// </summary>
+    True,
+
+    /// <summary>
+    /// Логический литерал 'false' (зарезервировано).
+    /// </summary>
+    False,
+
+    /// <summary>
+    /// Конец файла.
     /// </summary>
     Eof,
 }
